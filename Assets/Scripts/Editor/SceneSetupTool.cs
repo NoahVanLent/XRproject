@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.AI;
+using UnityEngine.XR.Interaction.Toolkit;
 using System.Collections.Generic;
 
 // Menu: Tools > Hide & Sneak > Setup Scene
@@ -12,7 +13,7 @@ public static class SceneSetupTool
     {
         SetupTags();
         SetupGameManager();
-        SetupPlayer();
+        SetupXROrigin();
         SetupSeekerAgent();
         SetupGuardAgent();
         SetupWatcherAgent();
@@ -21,6 +22,9 @@ public static class SceneSetupTool
 
         Debug.Log("Scene setup complete! Don't forget to bake the NavMesh: Window > AI > Navigation > Bake.");
     }
+
+    [MenuItem("Tools/Hide & Sneak/Setup XR Origin Only")]
+    public static void SetupXROriginOnly() => SetupXROrigin();
 
     static void SetupTags()
     {
@@ -38,34 +42,95 @@ public static class SceneSetupTool
         Undo.RegisterCreatedObjectUndo(go, "Create GameManager");
     }
 
-    static void SetupPlayer()
+    static void SetupXROrigin()
     {
-        // Try to find existing XR Origin
-        var player = GameObject.Find("XR Origin (XR Rig)") ?? GameObject.Find("XR Origin");
-        if (player == null)
+        // Remove old placeholder if present
+        var old = GameObject.Find("XR Origin (XR Rig)");
+        if (old != null && old.GetComponent<CharacterController>() == null)
         {
-            // Create a simple stand-in if no XR rig is in the scene yet
-            player = new GameObject("XR Origin (XR Rig)");
-            player.transform.position = new Vector3(0, 0, 0);
-            var capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            capsule.transform.SetParent(player.transform);
-            capsule.transform.localPosition = new Vector3(0, 1, 0);
-            capsule.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
-            Undo.RegisterCreatedObjectUndo(player, "Create Player");
+            Undo.DestroyObjectImmediate(old);
+            old = null;
         }
 
-        player.tag = "Player";
-
-        if (player.GetComponent<PlayerHide>() == null)
-            player.AddComponent<PlayerHide>();
-
-        // Add a CapsuleCollider so HidingSpot triggers fire
-        if (player.GetComponent<Collider>() == null)
+        var existing = GameObject.Find("XR Origin");
+        if (existing != null)
         {
-            var col = player.AddComponent<CapsuleCollider>();
-            col.height = 1.8f;
-            col.radius = 0.3f;
-            col.center = new Vector3(0, 0.9f, 0);
+            ConfigureXROrigin(existing);
+            return;
+        }
+
+        // --- Build XR Origin hierarchy ---
+        var xrOrigin = new GameObject("XR Origin");
+        xrOrigin.transform.position = Vector3.zero;
+        Undo.RegisterCreatedObjectUndo(xrOrigin, "Create XR Origin");
+
+        // Camera Offset
+        var cameraOffset = new GameObject("Camera Offset");
+        cameraOffset.transform.SetParent(xrOrigin.transform);
+        cameraOffset.transform.localPosition = new Vector3(0, 1.36f, 0);
+
+        // Main Camera
+        var cameraGO = new GameObject("Main Camera");
+        cameraGO.transform.SetParent(cameraOffset.transform);
+        cameraGO.transform.localPosition = Vector3.zero;
+        var cam = cameraGO.AddComponent<Camera>();
+        cam.nearClipPlane = 0.01f;
+        cameraGO.tag = "MainCamera";
+        cameraGO.AddComponent<AudioListener>();
+
+        // Add TrackedPoseDriver so camera follows headset
+        var tpd = cameraGO.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
+
+        // Left Controller
+        var leftHand = new GameObject("Left Controller");
+        leftHand.transform.SetParent(cameraOffset.transform);
+        leftHand.transform.localPosition = new Vector3(-0.2f, -0.2f, 0.3f);
+        var leftController = leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+
+        // Right Controller
+        var rightHand = new GameObject("Right Controller");
+        rightHand.transform.SetParent(cameraOffset.transform);
+        rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
+        var rightController = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+
+        // XR Interaction Manager (needed for interactions)
+        if (GameObject.FindObjectOfType<XRInteractionManager>() == null)
+        {
+            var mgr = new GameObject("XR Interaction Manager");
+            mgr.AddComponent<XRInteractionManager>();
+            Undo.RegisterCreatedObjectUndo(mgr, "Create XR Interaction Manager");
+        }
+
+        ConfigureXROrigin(xrOrigin);
+        Debug.Log("XR Origin created. Go to Edit > Project Settings > XR Plug-in Management, enable OpenXR, then add the Meta Quest Feature Set under OpenXR features.");
+    }
+
+    static void ConfigureXROrigin(GameObject xrOrigin)
+    {
+        xrOrigin.tag = "Player";
+
+        if (xrOrigin.GetComponent<CharacterController>() == null)
+        {
+            var cc = xrOrigin.AddComponent<CharacterController>();
+            cc.height = 1.8f;
+            cc.radius = 0.3f;
+            cc.center = new Vector3(0, 0.9f, 0);
+        }
+
+        if (xrOrigin.GetComponent<PlayerHide>() == null)
+            xrOrigin.AddComponent<PlayerHide>();
+
+        if (xrOrigin.GetComponent<VRLocomotion>() == null)
+        {
+            var loco = xrOrigin.AddComponent<VRLocomotion>();
+            // Wire up camera transform
+            var cam = xrOrigin.GetComponentInChildren<Camera>();
+            if (cam != null)
+            {
+                var so = new SerializedObject(loco);
+                so.FindProperty("cameraTransform").objectReferenceValue = cam.transform;
+                so.ApplyModifiedProperties();
+            }
         }
     }
 
