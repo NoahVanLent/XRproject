@@ -1,0 +1,38 @@
+# Unity generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Visual Studio
+.vs/
+*.csproj
+*.sln
+*.userprefs
+*.user
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# JetBrains Rider
+.idea/
+*.rider.*.user.xml
+
+# Unity crash reports
+sysinfo.txt
+crashes/
+
+# Asset meta files should be tracked
+# *.meta
+
+# Unity cache
+[Aa]sset[Ss]tore-5.x/
+ExportedObj/
+.consulo/
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
