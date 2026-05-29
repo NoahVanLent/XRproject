@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
 
 // Attach to the XR Origin. Tracks whether the player is currently hidden.
 // Call Hide() / Unhide() from a HidingSpot when the player enters/exits.

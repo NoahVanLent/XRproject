@@ -29,6 +29,12 @@ public class GuardAgent : MonoBehaviour
         _agent.speed = patrolSpeed;
     }
 
+    void Start()
+    {
+        if (patrolPoints.Length > 0)
+            _agent.SetDestination(patrolPoints[0].position);
+    }
+
     void Update()
     {
         if (!GameManager.Instance.IsPlaying()) return;
