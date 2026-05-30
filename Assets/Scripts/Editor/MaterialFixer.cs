@@ -35,13 +35,27 @@ public static class MaterialFixer
             var path = AssetDatabase.GUIDToAssetPath(guid);
             var mat  = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat == null || mat.shader == null) continue;
-            if (mat.shader.name.Contains("Universal Render Pipeline")) continue;
 
-            var color = mat.HasProperty("_Color") ? mat.color : Color.white;
-            mat.shader = Shader.Find("Universal Render Pipeline/Lit");
-            mat.color  = color;
-            EditorUtility.SetDirty(mat);
-            count++;
+            var shaderName = mat.shader.name;
+            // Skip URP, Hidden, Decal and other special shaders
+            if (shaderName.Contains("Universal Render Pipeline")) continue;
+            if (shaderName.Contains("Hidden"))  continue;
+            if (shaderName.Contains("Decal"))   continue;
+            if (shaderName.Contains("Sprites"))  continue;
+            if (shaderName.Contains("Particle")) continue;
+
+            Color color = Color.white;
+            try { if (mat.HasProperty("_Color")) color = mat.color; }
+            catch { /* some materials throw even with HasProperty check */ }
+
+            try
+            {
+                mat.shader = Shader.Find("Universal Render Pipeline/Lit");
+                mat.color  = color;
+                EditorUtility.SetDirty(mat);
+                count++;
+            }
+            catch { /* skip materials that refuse to change */ }
         }
         AssetDatabase.SaveAssets();
         Debug.Log($"Force-upgraded {count} materials to URP Lit.");
