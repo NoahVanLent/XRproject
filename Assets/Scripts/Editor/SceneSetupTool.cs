@@ -18,6 +18,7 @@ public static class SceneSetupTool
         SetupGuardAgent();
         SetupWatcherAgent();
         SetupHidingSpots();
+        SetupGrabbableProps();
         SetupFloor();
 
         Debug.Log("Scene setup complete! Don't forget to bake the NavMesh: Window > AI > Navigation > Bake.");
@@ -81,17 +82,28 @@ public static class SceneSetupTool
         // Add TrackedPoseDriver so camera follows headset
         var tpd = cameraGO.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
 
-        // Left Controller
+        // Left Controller — direct interactor (grab nearby objects)
         var leftHand = new GameObject("Left Controller");
         leftHand.transform.SetParent(cameraOffset.transform);
         leftHand.transform.localPosition = new Vector3(-0.2f, -0.2f, 0.3f);
-        var leftController = leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+        leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+        leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRDirectInteractor>();
 
-        // Right Controller
+        // Right Controller — ray interactor (point and select at distance)
         var rightHand = new GameObject("Right Controller");
         rightHand.transform.SetParent(cameraOffset.transform);
         rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
-        var rightController = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+        rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+        var rayInteractor = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
+
+        // Visual ray line
+        var lineRenderer = rightHand.AddComponent<LineRenderer>();
+        lineRenderer.startWidth = 0.005f;
+        lineRenderer.endWidth = 0.005f;
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor = Color.white;
+        lineRenderer.endColor = new Color(1, 1, 1, 0f);
+        rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
 
         // XR Interaction Manager (needed for interactions)
         if (GameObject.FindObjectOfType<XRInteractionManager>() == null)
@@ -119,6 +131,9 @@ public static class SceneSetupTool
 
         if (xrOrigin.GetComponent<PlayerHide>() == null)
             xrOrigin.AddComponent<PlayerHide>();
+
+        if (xrOrigin.GetComponent<ApplicationControl>() == null)
+            xrOrigin.AddComponent<ApplicationControl>();
 
         if (xrOrigin.GetComponent<VRLocomotion>() == null)
         {
@@ -243,6 +258,32 @@ public static class SceneSetupTool
             renderer.material.color = new Color(0.3f, 0.6f, 0.3f);
 
             Undo.RegisterCreatedObjectUndo(cube, "Create " + name);
+        }
+    }
+
+    static void SetupGrabbableProps()
+    {
+        if (GameObject.Find("GrabbableProp_1") != null) return;
+
+        var positions = new Vector3[] { new Vector3(1, 1, 2), new Vector3(-1, 1, 2) };
+        foreach (var pos in positions)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "GrabbableProp_" + System.Array.IndexOf(positions, pos);
+            cube.transform.position = pos;
+            cube.transform.localScale = Vector3.one * 0.2f;
+
+            var rb = cube.AddComponent<Rigidbody>();
+            rb.mass = 0.5f;
+
+            cube.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+            cube.AddComponent<GrabbableObject>();
+
+            var renderer = cube.GetComponent<Renderer>();
+            renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            renderer.material.color = new Color(0.8f, 0.5f, 0.1f);
+
+            Undo.RegisterCreatedObjectUndo(cube, "Create " + cube.name);
         }
     }
 
