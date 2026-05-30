@@ -58,6 +58,10 @@ public static class AssetApplicator
         foreach (var col in npc.GetComponentsInChildren<Collider>())
             Object.DestroyImmediate(col);
 
+        // Add procedural animator if not already present
+        if (agent.GetComponent<AgentAnimator>() == null)
+            agent.AddComponent<AgentAnimator>();
+
         Undo.RegisterCreatedObjectUndo(npc, $"Apply NPC to {agentName}");
         Debug.Log($"NPC model applied to {agentName}");
     }

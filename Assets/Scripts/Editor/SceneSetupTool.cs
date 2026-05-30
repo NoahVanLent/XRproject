@@ -182,6 +182,7 @@ public static class SceneSetupTool
             var navAgent = go.AddComponent<NavMeshAgent>();
             navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
+            go.AddComponent<AgentAnimator>();
             var seeker = go.AddComponent<SeekerAgent>();
             var so = new SerializedObject(seeker);
             so.FindProperty("mode").enumValueIndex = 0;         // Wander
@@ -198,6 +199,7 @@ public static class SceneSetupTool
             var navAgent = go.AddComponent<NavMeshAgent>();
             navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
+            go.AddComponent<AgentAnimator>();
             var seeker = go.AddComponent<SeekerAgent>();
             var so = new SerializedObject(seeker);
             so.FindProperty("mode").enumValueIndex = 1;         // Chaser
@@ -213,6 +215,7 @@ public static class SceneSetupTool
             var navAgent = go.AddComponent<NavMeshAgent>();
             navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
+            go.AddComponent<AgentAnimator>();
             var seeker = go.AddComponent<SeekerAgent>();
             var so = new SerializedObject(seeker);
             so.FindProperty("mode").enumValueIndex = 2;         // Stalker

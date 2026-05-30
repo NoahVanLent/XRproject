@@ -25,6 +25,46 @@ public static class MaterialFixer
 
     // ── Force upgrade ALL materials in entire project ─────────────────────────
 
+    // ── Fix scene renderers directly (fixes VR left-eye purple issue) ─────────
+
+    [MenuItem("Tools/Hide & Sneak/Fix Scene Renderers for VR")]
+    public static void FixSceneRenderersForVR()
+    {
+        var urpLit = Shader.Find("Universal Render Pipeline/Lit");
+        if (urpLit == null) { Debug.LogError("URP Lit shader not found!"); return; }
+
+        int count = 0;
+        foreach (var rend in Object.FindObjectsOfType<Renderer>(true))
+        {
+            var mats = rend.sharedMaterials;
+            bool changed = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null) continue;
+                var sName = mats[i].shader.name;
+                if (sName.Contains("Universal Render Pipeline")) continue;
+                if (sName.Contains("Hidden"))  continue;
+                if (sName.Contains("Decal"))   continue;
+                if (sName.Contains("Sprites")) continue;
+
+                // Create a new URP material instance so we don't modify the asset
+                var newMat = new Material(urpLit);
+                try { if (mats[i].HasProperty("_Color")) newMat.color = mats[i].color; }
+                catch { }
+                newMat.name = mats[i].name + "_URP";
+                mats[i] = newMat;
+                changed = true;
+                count++;
+            }
+            if (changed)
+            {
+                rend.sharedMaterials = mats;
+                EditorUtility.SetDirty(rend.gameObject);
+            }
+        }
+        Debug.Log($"Fixed {count} non-URP shader instances in scene.");
+    }
+
     [MenuItem("Tools/Hide & Sneak/Fix Extra Material Slots")]
     public static void FixExtraMaterialSlots()
     {
