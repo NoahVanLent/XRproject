@@ -50,9 +50,23 @@ public class VRLocomotion : MonoBehaviour
     {
         if (!GameManager.Instance.IsPlaying()) return;
 
+        UpdateCharacterControllerHeight();
         HandleMovement();
         HandleSnapTurn();
         ApplyGravity();
+    }
+
+    // Keep CharacterController centered on the physical camera so collisions stay accurate
+    void UpdateCharacterControllerHeight()
+    {
+        if (cameraTransform == null) return;
+        float camY = cameraTransform.localPosition.y;
+        float height = Mathf.Clamp(camY, 0.5f, 2.5f);
+        _controller.height = height;
+        _controller.center = new Vector3(
+            cameraTransform.localPosition.x,
+            height * 0.5f,
+            cameraTransform.localPosition.z);
     }
 
     void HandleMovement()

@@ -115,9 +115,17 @@ public static class SceneSetupTool
         var rightHand = new GameObject("Right Controller");
         rightHand.transform.SetParent(cameraOffset.transform);
         rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
-        rightHand.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f); // aim ray forward
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
-        rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
+
+        // Ray attach point — child rotated so the ray aims forward from the controller tip
+        var rayOrigin = new GameObject("Ray Origin");
+        rayOrigin.transform.SetParent(rightHand.transform);
+        rayOrigin.transform.localPosition = Vector3.zero;
+        rayOrigin.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f);
+
+        var rayInteractor = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
+        rayInteractor.rayOriginTransform = rayOrigin.transform;
+
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
 
         // Right controller tracking
