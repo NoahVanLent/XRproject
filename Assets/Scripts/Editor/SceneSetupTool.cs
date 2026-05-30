@@ -18,6 +18,7 @@ public static class SceneSetupTool
         SetupHidingSpots();
         SetupGrabbableProps();
         SetupFloor();
+        SetupUI();
 
         Debug.Log("Scene setup complete! Don't forget to bake the NavMesh: Window > AI > Navigation > Bake.");
     }
@@ -287,6 +288,131 @@ public static class SceneSetupTool
 
             Undo.RegisterCreatedObjectUndo(cube, "Create " + cube.name);
         }
+    }
+
+    static void SetupUI()
+    {
+        if (GameObject.Find("WorldSpaceUI") != null) return;
+
+        // Find camera to attach HUD to
+        var cam = Camera.main;
+        if (cam == null) { Debug.LogWarning("No main camera found — run Setup XR Origin first."); return; }
+
+        // World-space canvas parented to camera so it follows the headset
+        var canvasGO = new GameObject("WorldSpaceUI");
+        canvasGO.transform.SetParent(cam.transform);
+        canvasGO.transform.localPosition = new Vector3(0f, 0f, 1.5f);
+        canvasGO.transform.localRotation = Quaternion.identity;
+        canvasGO.transform.localScale    = Vector3.one * 0.001f;
+
+        var canvas = canvasGO.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        var rt = canvasGO.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(800, 600);
+
+        canvasGO.AddComponent<UnityEngine.UI.CanvasScaler>();
+        canvasGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+
+        var uiManager = canvasGO.AddComponent<UIManager>();
+
+        // --- Timer text (top centre) ---
+        var timerGO = CreateUIText(canvasGO, "TimerText", "2:00",
+            new Vector2(0, 260), new Vector2(300, 60), 48, Color.white);
+
+        // --- Hidden status (top left) ---
+        var hiddenGO = CreateUIText(canvasGO, "HiddenText", "",
+            new Vector2(-280, 260), new Vector2(200, 50), 32, Color.green);
+
+        // --- Caught panel ---
+        var caughtPanel = CreatePanel(canvasGO, "CaughtPanel", new Color(0.7f, 0.1f, 0.1f, 0.85f));
+        CreateUIText(caughtPanel, "CaughtLabel", "YOU WERE CAUGHT!",
+            new Vector2(0, 60), new Vector2(600, 80), 52, Color.white);
+        CreateButton(caughtPanel, "RestartBtn", "Restart",
+            new Vector2(0, -40), new Vector2(220, 60), uiManager);
+
+        // --- Won panel ---
+        var wonPanel = CreatePanel(canvasGO, "WonPanel", new Color(0.1f, 0.6f, 0.1f, 0.85f));
+        CreateUIText(wonPanel, "WonLabel", "YOU SURVIVED!",
+            new Vector2(0, 60), new Vector2(600, 80), 52, Color.white);
+        CreateButton(wonPanel, "RestartBtn2", "Play Again",
+            new Vector2(0, -40), new Vector2(220, 60), uiManager);
+
+        // Wire UIManager references
+        var so = new SerializedObject(uiManager);
+        so.FindProperty("timerText").objectReferenceValue      = timerGO.GetComponent<TMPro.TextMeshProUGUI>();
+        so.FindProperty("hiddenStatusText").objectReferenceValue = hiddenGO.GetComponent<TMPro.TextMeshProUGUI>();
+        so.FindProperty("caughtPanel").objectReferenceValue    = caughtPanel;
+        so.FindProperty("wonPanel").objectReferenceValue       = wonPanel;
+        so.ApplyModifiedProperties();
+
+        Undo.RegisterCreatedObjectUndo(canvasGO, "Create WorldSpaceUI");
+        Debug.Log("UI created and attached to Main Camera.");
+    }
+
+    static GameObject CreateUIText(GameObject parent, string name, string text,
+        Vector2 anchoredPos, Vector2 size, int fontSize, Color color)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent.transform, false);
+
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+
+        var tmp = go.AddComponent<TMPro.TextMeshProUGUI>();
+        tmp.text = text;
+        tmp.fontSize = fontSize;
+        tmp.color = color;
+        tmp.alignment = TMPro.TextAlignmentOptions.Center;
+        tmp.fontStyle = TMPro.FontStyles.Bold;
+
+        return go;
+    }
+
+    static GameObject CreatePanel(GameObject parent, string name, Color bgColor)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent.transform, false);
+        go.SetActive(false);
+
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(700, 300);
+
+        var img = go.AddComponent<UnityEngine.UI.Image>();
+        img.color = bgColor;
+
+        return go;
+    }
+
+    static void CreateButton(GameObject parent, string name, string label,
+        Vector2 anchoredPos, Vector2 size, UIManager uiManager)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent.transform, false);
+
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+
+        var img = go.AddComponent<UnityEngine.UI.Image>();
+        img.color = new Color(1f, 1f, 1f, 0.9f);
+
+        var btn = go.AddComponent<UnityEngine.UI.Button>();
+        btn.onClick.AddListener(uiManager.OnRestartButton);
+
+        var textGO = new GameObject("Label");
+        textGO.transform.SetParent(go.transform, false);
+        var textRT = textGO.AddComponent<RectTransform>();
+        textRT.anchoredPosition = Vector2.zero;
+        textRT.sizeDelta = size;
+
+        var tmp = textGO.AddComponent<TMPro.TextMeshProUGUI>();
+        tmp.text = label;
+        tmp.fontSize = 28;
+        tmp.color = Color.black;
+        tmp.alignment = TMPro.TextAlignmentOptions.Center;
+        tmp.fontStyle = TMPro.FontStyles.Bold;
     }
 
     static void SetupFloor()
