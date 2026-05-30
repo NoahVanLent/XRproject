@@ -53,8 +53,7 @@ public class VRLocomotion : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.Instance.IsPlaying()) return;
-
+        // Movement always works — game state only blocks AI, not the player
         UpdateCharacterControllerHeight();
         HandleMovement();
         HandleSnapTurn();

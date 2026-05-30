@@ -109,22 +109,12 @@ public static class SceneSetupTool
         leftTPD.positionInput = new UnityEngine.InputSystem.InputActionProperty(leftPosAction);
         leftTPD.rotationInput = new UnityEngine.InputSystem.InputActionProperty(leftRotAction);
 
-        // Right Controller — ray interactor (point and select at distance)
+        // Right Controller — custom ray (reliable, no XRRayInteractor needed)
         var rightHand = new GameObject("Right Controller");
         rightHand.transform.SetParent(cameraOffset.transform);
         rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
-
-        // Ray attach point — child rotated so the ray aims forward from the controller tip
-        var rayOrigin = new GameObject("Ray Origin");
-        rayOrigin.transform.SetParent(rightHand.transform);
-        rayOrigin.transform.localPosition = Vector3.zero;
-        rayOrigin.transform.localRotation = Quaternion.Euler(-60f, 180f, 0f);
-
-        var rayInteractor = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
-        rayInteractor.rayOriginTransform = rayOrigin.transform;
-
-        rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
+        rightHand.AddComponent<ControllerRay>();
 
         // Right controller tracking
         var rightTPD = rightHand.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
@@ -205,7 +195,7 @@ public static class SceneSetupTool
             var seeker = go.AddComponent<SeekerAgent>();
             var so = new SerializedObject(seeker);
             so.FindProperty("mode").enumValueIndex = 1;         // Chaser
-            so.FindProperty("chaseSpeed").floatValue = 1.8f;
+            so.FindProperty("chaseSpeed").floatValue = 1.3f;
             so.ApplyModifiedProperties();
             Undo.RegisterCreatedObjectUndo(go, "Create Chaser");
         }
