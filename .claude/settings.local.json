@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/noahv/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/f342022f-5a6a-451e-9c10-d6afca303505/dee10703-eb7c-412e-a144-66cc3158c5d6/skills/pptx/**)",
+      "Bash(python scripts/extract-text.py \"C:\\\\Users\\\\noahv\\\\Downloads\\\\taak XR.pptx\")",
+      "PowerShell(git -C \"C:\\\\Users\\\\noahv\\\\OneDrive\\\\Documenten\\\\XRdev\\\\KDG_HideAndSeek\" status 2>&1)",
+      "PowerShell(Get-Content \"$env:USERPROFILE\\\\.ssh\\\\id_ed25519.pub\" 2>&1)",
+      "PowerShell($env:GIT_SSH = \"C:\\\\Program Files\\\\Git\\\\usr\\\\bin\\\\ssh.exe\"; git -C \"C:\\\\Users\\\\noahv\\\\OneDrive\\\\Documenten\\\\XRdev\\\\KDG_HideAndSeek\" push -u origin main)"
+    ]
+  }
+}

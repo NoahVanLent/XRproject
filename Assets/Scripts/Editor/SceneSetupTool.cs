@@ -40,7 +40,6 @@ public static class SceneSetupTool
 
         var go = new GameObject("GameManager");
         go.AddComponent<GameManager>();
-        go.AddComponent<RuntimeMaterialFixer>();
         Undo.RegisterCreatedObjectUndo(go, "Create GameManager");
 
         var audioGO = new GameObject("AudioManager");
