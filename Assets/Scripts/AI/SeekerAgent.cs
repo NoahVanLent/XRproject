@@ -33,6 +33,10 @@ public class SeekerAgent : MonoBehaviour
     private bool _activated;      // for Stalker: has it spotted player yet?
     private float _wanderTimer;
 
+    void OnEnable()  => EventManager.OnPlayerCaught += OnPlayerCaught;
+    void OnDisable() => EventManager.OnPlayerCaught -= OnPlayerCaught;
+    void OnPlayerCaught() => _agent.isStopped = true;
+
     void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();

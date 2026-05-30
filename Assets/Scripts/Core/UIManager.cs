@@ -24,6 +24,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject wonPanel;
     [SerializeField] private TextMeshProUGUI wonText;
 
+    private InputAction _restartAction;
+
     void OnEnable()
     {
         EventManager.OnTimerUpdated  += UpdateTimer;
@@ -31,6 +33,13 @@ public class UIManager : MonoBehaviour
         EventManager.OnPlayerWon     += ShowWon;
         EventManager.OnPlayerHidden  += () => SetHiddenStatus(true);
         EventManager.OnPlayerVisible += () => SetHiddenStatus(false);
+
+        // Press A button on right controller to restart after game over
+        _restartAction = new UnityEngine.InputSystem.InputAction("Restart", expectedControlType: "Button");
+        _restartAction.AddBinding("<XRController>{RightHand}/primaryButton");
+        _restartAction.AddBinding("<OculusTouchController>{RightHand}/primaryButton");
+        _restartAction.performed += _ => TryRestart();
+        _restartAction.Enable();
     }
 
     void OnDisable()
@@ -40,6 +49,14 @@ public class UIManager : MonoBehaviour
         EventManager.OnPlayerWon     -= ShowWon;
         EventManager.OnPlayerHidden  -= () => SetHiddenStatus(true);
         EventManager.OnPlayerVisible -= () => SetHiddenStatus(false);
+        _restartAction?.Disable();
+    }
+
+    void TryRestart()
+    {
+        // Only restart when game is over
+        if (GameManager.Instance.IsPlaying()) return;
+        OnRestartButton();
     }
 
     void Start()
@@ -71,12 +88,14 @@ public class UIManager : MonoBehaviour
     {
         if (caughtPanel != null) caughtPanel.SetActive(true);
         if (wonPanel    != null) wonPanel.SetActive(false);
+        if (caughtText  != null) caughtText.text = "YOU WERE CAUGHT!\n\n<size=24>Press A to restart</size>";
     }
 
     void ShowWon()
     {
         if (wonPanel    != null) wonPanel.SetActive(true);
         if (caughtPanel != null) caughtPanel.SetActive(false);
+        if (wonText     != null) wonText.text = "YOU SURVIVED!\n\n<size=24>Press A to play again</size>";
     }
 
     public void OnRestartButton()
