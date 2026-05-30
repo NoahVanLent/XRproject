@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// </summary>
 public static class MaterialFixer
 {
-    [MenuItem("Tools/Hide & Sneak/Fix Purple Materials")]
+    [MenuItem("Tools/Hide & Sneak/Fix Purple Materials (All)")]
     public static void FixAll()
     {
         ExtractAndUpgradeFBXMaterials();
@@ -21,6 +21,30 @@ public static class MaterialFixer
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("Done! If anything is still purple: Edit > Rendering > Materials > Convert All Built-in Materials to URP.");
+    }
+
+    // ── Force upgrade ALL materials in entire project ─────────────────────────
+
+    [MenuItem("Tools/Hide & Sneak/Force Upgrade All Materials to URP")]
+    public static void ForceUpgradeAll()
+    {
+        var allMatGuids = AssetDatabase.FindAssets("t:Material");
+        int count = 0;
+        foreach (var guid in allMatGuids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var mat  = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null || mat.shader == null) continue;
+            if (mat.shader.name.Contains("Universal Render Pipeline")) continue;
+
+            var color = mat.HasProperty("_Color") ? mat.color : Color.white;
+            mat.shader = Shader.Find("Universal Render Pipeline/Lit");
+            mat.color  = color;
+            EditorUtility.SetDirty(mat);
+            count++;
+        }
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Force-upgraded {count} materials to URP Lit.");
     }
 
     // ── Extract FBX Materials ─────────────────────────────────────────────────
