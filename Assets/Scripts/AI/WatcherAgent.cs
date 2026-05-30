@@ -32,7 +32,7 @@ public class WatcherAgent : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.Instance.IsPlaying()) return;
+        // Game always continues
 
         Scan();
         Rotate();

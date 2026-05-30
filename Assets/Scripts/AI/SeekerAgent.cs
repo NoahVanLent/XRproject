@@ -54,8 +54,6 @@ public class SeekerAgent : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.Instance.IsPlaying()) return;
-
         switch (mode)
         {
             case Mode.Wander:  UpdateWander();  break;
