@@ -30,5 +30,7 @@ public class StartButton : MonoBehaviour
         if (_pressed) return;
         _pressed = true;
         GameManager.Instance.StartGame();
+        // Hide the entire start button panel
+        transform.root.gameObject.SetActive(false);
     }
 }
