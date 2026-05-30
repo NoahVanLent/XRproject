@@ -1,24 +1,24 @@
 using UnityEngine;
-using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
 // Attach to the Right Controller GameObject.
-// Draws a ray from the controller and highlights whatever it points at.
-// Pull the right trigger to interact (grab/select).
+// Only highlights and grabs objects that have a GrabbableObject component.
 public class ControllerRay : MonoBehaviour
 {
     [Header("Ray Settings")]
     [SerializeField] private float maxDistance = 10f;
-    [SerializeField] private Color defaultColor = Color.white;
+    [SerializeField] private Color defaultColor = new Color(1f, 1f, 1f, 0.4f);
     [SerializeField] private Color hitColor = new Color(0.3f, 1f, 0.3f);
 
     private LineRenderer _line;
     private InputAction _triggerAction;
-    private GameObject _lastHit;
+    private GameObject _lastHovered;
+    private GameObject _heldObject;
+    private Rigidbody _heldRb;
+    private bool _triggerWasPressed;
 
     void Awake()
     {
-        // Line renderer for visual ray
         _line = gameObject.AddComponent<LineRenderer>();
         _line.positionCount = 2;
         _line.startWidth = 0.005f;
@@ -26,64 +26,117 @@ public class ControllerRay : MonoBehaviour
         _line.material = new Material(Shader.Find("Sprites/Default"));
         _line.useWorldSpace = true;
 
-        // Right trigger input
         _triggerAction = new InputAction("RightTrigger", expectedControlType: "float");
         _triggerAction.AddBinding("<XRController>{RightHand}/trigger");
         _triggerAction.AddBinding("<OculusTouchController>{RightHand}/triggerPressed");
         _triggerAction.Enable();
     }
 
-    void OnDestroy()
-    {
-        _triggerAction?.Disable();
-    }
+    void OnDestroy() => _triggerAction?.Disable();
 
     void Update()
+    {
+        // If holding an object, move it with the controller
+        if (_heldObject != null)
+        {
+            UpdateHeld();
+            return;
+        }
+
+        CastRay();
+    }
+
+    void CastRay()
     {
         Vector3 origin = transform.position;
         Vector3 direction = transform.forward;
 
+        bool triggerPressed = _triggerAction.ReadValue<float>() > 0.5f;
+        bool triggerDown = triggerPressed && !_triggerWasPressed;
+        _triggerWasPressed = triggerPressed;
+
         bool didHit = Physics.Raycast(origin, direction, out RaycastHit hit, maxDistance);
+
+        // Only care about grabbable objects
+        GrabbableObject grabbable = didHit ? hit.collider.GetComponent<GrabbableObject>() : null;
 
         // Update line
         _line.SetPosition(0, origin);
-        _line.SetPosition(1, didHit ? hit.point : origin + direction * maxDistance);
-        _line.startColor = _line.endColor = didHit ? hitColor : defaultColor;
+        _line.SetPosition(1, grabbable != null ? hit.point : origin + direction * maxDistance);
+        _line.startColor = _line.endColor = grabbable != null ? hitColor : defaultColor;
 
-        // Hover highlight
-        if (didHit)
+        // Hover highlight — only on grabbables
+        if (grabbable != null)
         {
-            if (hit.collider.gameObject != _lastHit)
+            if (hit.collider.gameObject != _lastHovered)
             {
-                ClearLastHit();
-                _lastHit = hit.collider.gameObject;
-                HighlightObject(_lastHit, true);
+                ClearHover();
+                _lastHovered = hit.collider.gameObject;
+                SetHighlight(_lastHovered, true);
             }
 
-            // Trigger pressed — interact
-            if (_triggerAction.ReadValue<float>() > 0.5f)
-                TryInteract(hit.collider.gameObject);
+            // Grab on trigger press
+            if (triggerDown)
+                GrabObject(hit.collider.gameObject, hit.collider.GetComponent<Rigidbody>());
         }
         else
         {
-            ClearLastHit();
+            ClearHover();
         }
     }
 
-    void TryInteract(GameObject target)
+    void GrabObject(GameObject obj, Rigidbody rb)
     {
-        // Hiding spot interaction
-        if (target.TryGetComponent<HidingSpot>(out var spot))
-        {
-            var player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerHide>();
-            if (player != null && !player.IsHidden)
-                player.Hide();
-        }
+        if (rb == null) return;
 
-        Debug.Log($"Ray interact: {target.name}");
+        ClearHover();
+        _heldObject = obj;
+        _heldRb = rb;
+
+        _heldRb.isKinematic = true;
+        _heldRb.useGravity = false;
+
+        SetHighlight(_heldObject, false);
+        Debug.Log($"Grabbed: {obj.name}");
     }
 
-    void HighlightObject(GameObject obj, bool on)
+    void UpdateHeld()
+    {
+        // Follow controller position smoothly
+        _heldObject.transform.position = Vector3.Lerp(
+            _heldObject.transform.position,
+            transform.position + transform.forward * 0.4f,
+            Time.deltaTime * 20f);
+        _heldObject.transform.rotation = transform.rotation;
+
+        // Update line to show held object
+        _line.SetPosition(0, transform.position);
+        _line.SetPosition(1, _heldObject.transform.position);
+        _line.startColor = _line.endColor = hitColor;
+
+        // Release on trigger release
+        bool triggerPressed = _triggerAction.ReadValue<float>() > 0.5f;
+        if (!triggerPressed && _triggerWasPressed)
+            ReleaseObject();
+
+        _triggerWasPressed = triggerPressed;
+    }
+
+    void ReleaseObject()
+    {
+        if (_heldRb != null)
+        {
+            _heldRb.isKinematic = false;
+            _heldRb.useGravity = true;
+        }
+
+        Debug.Log($"Released: {_heldObject.name}");
+        _heldObject = null;
+        _heldRb = null;
+        _triggerWasPressed = false;
+    }
+
+    void SetHighlight(GameObject obj, bool on)
     {
         if (obj == null) return;
         var rend = obj.GetComponent<Renderer>();
@@ -91,14 +144,14 @@ public class ControllerRay : MonoBehaviour
 
         var mpb = new MaterialPropertyBlock();
         rend.GetPropertyBlock(mpb);
-        mpb.SetColor("_BaseColor", on ? new Color(1f, 0.9f, 0.3f) : Color.white);
+        mpb.SetColor("_BaseColor", on ? new Color(1f, 0.9f, 0.3f) : new Color(0.8f, 0.5f, 0.1f));
         rend.SetPropertyBlock(mpb);
     }
 
-    void ClearLastHit()
+    void ClearHover()
     {
-        if (_lastHit == null) return;
-        HighlightObject(_lastHit, false);
-        _lastHit = null;
+        if (_lastHovered == null) return;
+        SetHighlight(_lastHovered, false);
+        _lastHovered = null;
     }
 }
