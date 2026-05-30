@@ -34,12 +34,16 @@ public static class MaterialFixer
 
         foreach (var rend in renderers)
         {
-            var mf = rend.GetComponent<MeshFilter>();
-            if (mf == null || mf.sharedMesh == null) continue;
+            // Get mesh from MeshFilter or SkinnedMeshRenderer
+            Mesh mesh = null;
+            var mf  = rend.GetComponent<MeshFilter>();
+            var smr = rend.GetComponent<SkinnedMeshRenderer>();
+            if (mf  != null && mf.sharedMesh  != null) mesh = mf.sharedMesh;
+            if (smr != null && smr.sharedMesh != null) mesh = smr.sharedMesh;
+            if (mesh == null) continue;
 
-            int submeshCount = mf.sharedMesh.subMeshCount;
+            int submeshCount = mesh.subMeshCount;
             var mats = rend.sharedMaterials;
-
             if (mats.Length <= submeshCount) continue;
 
             // Trim to submesh count
