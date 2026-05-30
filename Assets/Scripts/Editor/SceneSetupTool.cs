@@ -121,7 +121,7 @@ public static class SceneSetupTool
         var rayOrigin = new GameObject("Ray Origin");
         rayOrigin.transform.SetParent(rightHand.transform);
         rayOrigin.transform.localPosition = Vector3.zero;
-        rayOrigin.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f);
+        rayOrigin.transform.localRotation = Quaternion.Euler(-60f, 180f, 0f);
 
         var rayInteractor = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
         rayInteractor.rayOriginTransform = rayOrigin.transform;
@@ -246,7 +246,12 @@ public static class SceneSetupTool
         agent.radius = 0.4f;
         agent.height = 1.8f;
 
-        go.AddComponent<WatcherAgent>();
+        var stalker = go.AddComponent<SeekerAgent>();
+        var so = new SerializedObject(stalker);
+        so.FindProperty("mode").enumValueIndex = 2;        // Mode.Stalker
+        so.FindProperty("stalkerSpeed").floatValue = 1.5f;
+        so.FindProperty("sightRange").floatValue = 10f;
+        so.ApplyModifiedProperties();
 
         Undo.RegisterCreatedObjectUndo(go, "Create Watcher");
     }

@@ -32,9 +32,14 @@ public class VRLocomotion : MonoBehaviour
         if (cameraTransform == null)
             cameraTransform = Camera.main?.transform;
 
-        // Bind directly to controller sticks
-        _moveAction = new InputAction("Move", binding: "<XRController>{LeftHand}/thumbstick", expectedControlType: "Vector2");
-        _turnAction = new InputAction("Turn", binding: "<XRController>{RightHand}/thumbstick", expectedControlType: "Vector2");
+        // Bind to controller sticks — both generic XR and Oculus-specific for Quest 2
+        _moveAction = new InputAction("Move", expectedControlType: "Vector2");
+        _moveAction.AddBinding("<XRController>{LeftHand}/thumbstick");
+        _moveAction.AddBinding("<OculusTouchController>{LeftHand}/thumbstick");
+
+        _turnAction = new InputAction("Turn", expectedControlType: "Vector2");
+        _turnAction.AddBinding("<XRController>{RightHand}/thumbstick");
+        _turnAction.AddBinding("<OculusTouchController>{RightHand}/thumbstick");
 
         _moveAction.Enable();
         _turnAction.Enable();
@@ -56,17 +61,14 @@ public class VRLocomotion : MonoBehaviour
         ApplyGravity();
     }
 
-    // Keep CharacterController centered on the physical camera so collisions stay accurate
+    // Keep CharacterController height matching the player's real-world height
     void UpdateCharacterControllerHeight()
     {
         if (cameraTransform == null) return;
         float camY = cameraTransform.localPosition.y;
         float height = Mathf.Clamp(camY, 0.5f, 2.5f);
         _controller.height = height;
-        _controller.center = new Vector3(
-            cameraTransform.localPosition.x,
-            height * 0.5f,
-            cameraTransform.localPosition.z);
+        _controller.center = new Vector3(0f, height * 0.5f, 0f); // keep x/z centered
     }
 
     void HandleMovement()
