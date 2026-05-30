@@ -254,8 +254,9 @@ public static class SceneSetupTool
 
             // Give it a distinct color
             var renderer = cube.GetComponent<Renderer>();
-            renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            renderer.material.color = new Color(0.3f, 0.6f, 0.3f);
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.color = new Color(0.3f, 0.6f, 0.3f);
+            renderer.sharedMaterial = mat;
 
             Undo.RegisterCreatedObjectUndo(cube, "Create " + name);
         }
@@ -280,8 +281,9 @@ public static class SceneSetupTool
             cube.AddComponent<GrabbableObject>();
 
             var renderer = cube.GetComponent<Renderer>();
-            renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            renderer.material.color = new Color(0.8f, 0.5f, 0.1f);
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.color = new Color(0.8f, 0.5f, 0.1f);
+            renderer.sharedMaterial = mat;
 
             Undo.RegisterCreatedObjectUndo(cube, "Create " + cube.name);
         }
@@ -309,8 +311,9 @@ public static class SceneSetupTool
         go.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
 
         var renderer = go.GetComponent<Renderer>();
-        renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        renderer.material.color = color;
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        mat.color = color;
+        renderer.sharedMaterial = mat;
 
         return go;
     }
