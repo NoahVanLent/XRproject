@@ -115,6 +115,7 @@ public static class SceneSetupTool
         var rightHand = new GameObject("Right Controller");
         rightHand.transform.SetParent(cameraOffset.transform);
         rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
+        rightHand.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f); // aim ray forward
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
