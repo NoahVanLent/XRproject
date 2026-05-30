@@ -14,11 +14,105 @@ public static class MaterialFixer
     [MenuItem("Tools/Hide & Sneak/Fix Purple Materials")]
     public static void FixAll()
     {
+        ExtractAndUpgradeFBXMaterials();
         FixNPCMaterials();
         FixSchoolMaterials();
+        DisableAgentAnimators();
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("Material fix complete! If anything is still purple, run Edit > Rendering > Materials > Convert All Built-in Materials to URP.");
+        Debug.Log("Done! If anything is still purple: Edit > Rendering > Materials > Convert All Built-in Materials to URP.");
+    }
+
+    // ── Extract FBX Materials ─────────────────────────────────────────────────
+
+    static void ExtractAndUpgradeFBXMaterials()
+    {
+        // Find all FBX importers in the npc and school folders
+        var guids = AssetDatabase.FindAssets("t:Model", new[] { "Assets/npc_casual_set_00", "Assets/school" });
+        int extracted = 0;
+
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+            if (importer == null) continue;
+
+            // Set material import mode to import and extract
+            if (importer.materialImportMode != ModelImporterMaterialImportMode.ImportViaMaterialDescription)
+            {
+                importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+            }
+
+            // Extract materials to a folder next to the FBX
+            var dir = Path.GetDirectoryName(path) + "/ExtractedMaterials";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var errors = importer.ExtractTextures(dir);
+            importer.SearchAndRemapMaterials(ModelImporterMaterialName.BasedOnMaterialName,
+                                              ModelImporterMaterialSearch.Everywhere);
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            extracted++;
+        }
+
+        AssetDatabase.Refresh();
+        Debug.Log($"Extracted materials from {extracted} FBX files.");
+
+        // Now upgrade all extracted materials to URP
+        UpgradeExtractedMaterials();
+    }
+
+    static void UpgradeExtractedMaterials()
+    {
+        var matGuids = AssetDatabase.FindAssets("t:Material", new[] { "Assets/npc_casual_set_00", "Assets/school" });
+        int upgraded = 0;
+        foreach (var guid in matGuids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            // Skip already-URP materials
+            if (path.Contains("MaterialsUPR")) continue;
+
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null) continue;
+            if (mat.shader == null) continue;
+            if (mat.shader.name.Contains("Universal Render Pipeline")) continue;
+
+            // Save color before upgrading shader
+            var color = mat.HasProperty("_Color") ? mat.color : Color.white;
+            mat.shader = Shader.Find("Universal Render Pipeline/Lit");
+            mat.color  = color;
+            EditorUtility.SetDirty(mat);
+            upgraded++;
+        }
+        Debug.Log($"Upgraded {upgraded} materials to URP Lit.");
+    }
+
+    // ── Disable Agent Animators ───────────────────────────────────────────────
+
+    static void DisableAgentAnimators()
+    {
+        string[] agentNames = { "Agent_Wanderer", "Agent_Chaser", "Agent_Stalker" };
+        foreach (var name in agentNames)
+        {
+            var agent = GameObject.Find(name);
+            if (agent == null) continue;
+
+            // Disable all animators on NPC children so they don't float around
+            foreach (var anim in agent.GetComponentsInChildren<Animator>(true))
+            {
+                anim.enabled = false;
+                EditorUtility.SetDirty(anim.gameObject);
+            }
+
+            // Also reset all child transforms to ground level
+            var npcModel = agent.transform.Find("NPCModel");
+            if (npcModel != null)
+            {
+                npcModel.localPosition = new Vector3(0, -0.9f, 0);
+                npcModel.localRotation = Quaternion.identity;
+            }
+
+            Debug.Log($"Disabled animators on {name}.");
+        }
     }
 
     // ── NPC Materials ─────────────────────────────────────────────────────────
