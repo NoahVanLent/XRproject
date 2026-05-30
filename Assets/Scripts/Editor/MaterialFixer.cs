@@ -25,6 +25,37 @@ public static class MaterialFixer
 
     // ── Force upgrade ALL materials in entire project ─────────────────────────
 
+    [MenuItem("Tools/Hide & Sneak/Fix Extra Material Slots")]
+    public static void FixExtraMaterialSlots()
+    {
+        // Find all renderers in the scene where materials > submeshes
+        var renderers = Object.FindObjectsOfType<Renderer>();
+        int fixed_count = 0;
+
+        foreach (var rend in renderers)
+        {
+            var mf = rend.GetComponent<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null) continue;
+
+            int submeshCount = mf.sharedMesh.subMeshCount;
+            var mats = rend.sharedMaterials;
+
+            if (mats.Length <= submeshCount) continue;
+
+            // Trim to submesh count
+            var trimmed = new Material[submeshCount];
+            for (int i = 0; i < submeshCount; i++)
+                trimmed[i] = mats[i];
+
+            rend.sharedMaterials = trimmed;
+            EditorUtility.SetDirty(rend.gameObject);
+            fixed_count++;
+        }
+
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Fixed {fixed_count} renderers with too many material slots.");
+    }
+
     [MenuItem("Tools/Hide & Sneak/Force Upgrade All Materials to URP")]
     public static void ForceUpgradeAll()
     {
