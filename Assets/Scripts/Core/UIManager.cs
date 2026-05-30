@@ -13,6 +13,9 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class UIManager : MonoBehaviour
 {
+    [Header("Start Screen")]
+    [SerializeField] private GameObject startPanel;
+
     [Header("HUD")]
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI hiddenStatusText;
@@ -29,6 +32,7 @@ public class UIManager : MonoBehaviour
 
     void OnEnable()
     {
+        EventManager.OnGameStarted   += OnGameStarted;
         EventManager.OnTimerUpdated  += UpdateTimer;
         EventManager.OnPlayerCaught  += ShowCaught;
         EventManager.OnPlayerWon     += ShowWon;
@@ -45,6 +49,7 @@ public class UIManager : MonoBehaviour
 
     void OnDisable()
     {
+        EventManager.OnGameStarted   -= OnGameStarted;
         EventManager.OnTimerUpdated  -= UpdateTimer;
         EventManager.OnPlayerCaught  -= ShowCaught;
         EventManager.OnPlayerWon     -= ShowWon;
@@ -62,9 +67,17 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
+        if (startPanel  != null) startPanel.SetActive(true);
         if (caughtPanel != null) caughtPanel.SetActive(false);
         if (wonPanel    != null) wonPanel.SetActive(false);
+        if (timerText   != null) timerText.gameObject.SetActive(false);
         SetHiddenStatus(false);
+    }
+
+    void OnGameStarted()
+    {
+        if (startPanel != null) startPanel.SetActive(false);
+        if (timerText  != null) timerText.gameObject.SetActive(true);
     }
 
     void UpdateTimer(float remaining)

@@ -65,6 +65,19 @@ public class ControllerRay : MonoBehaviour
         _line.SetPosition(1, grabbable != null ? hit.point : origin + direction * maxDistance);
         _line.startColor = _line.endColor = grabbable != null ? hitColor : defaultColor;
 
+        // Check for start button first
+        var startBtn = didHit ? hit.collider.GetComponent<StartButton>() : null;
+        if (startBtn != null)
+        {
+            if (hit.collider.gameObject != _lastHovered) { ClearHover(); _lastHovered = hit.collider.gameObject; }
+            startBtn.Hover(true);
+            _line.SetPosition(1, hit.point);
+            _line.startColor = _line.endColor = hitColor;
+            if (triggerDown) startBtn.Press();
+            _triggerWasPressed = triggerPressed;
+            return;
+        }
+
         // Hover highlight — only on grabbables
         if (grabbable != null)
         {

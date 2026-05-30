@@ -33,9 +33,18 @@ public class SeekerAgent : MonoBehaviour
     private bool _activated;      // for Stalker: has it spotted player yet?
     private float _wanderTimer;
 
-    void OnEnable()  => EventManager.OnPlayerCaught += OnPlayerCaught;
-    void OnDisable() => EventManager.OnPlayerCaught -= OnPlayerCaught;
+    void OnEnable()
+    {
+        EventManager.OnPlayerCaught += OnPlayerCaught;
+        EventManager.OnGameStarted  += OnGameStarted;
+    }
+    void OnDisable()
+    {
+        EventManager.OnPlayerCaught -= OnPlayerCaught;
+        EventManager.OnGameStarted  -= OnGameStarted;
+    }
     void OnPlayerCaught() => _agent.isStopped = true;
+    void OnGameStarted()  => _agent.isStopped = false;
 
     void Awake()
     {
@@ -58,6 +67,7 @@ public class SeekerAgent : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.IsWaiting()) return;
         switch (mode)
         {
             case Mode.Wander:  UpdateWander();  break;

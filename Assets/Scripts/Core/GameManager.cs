@@ -4,7 +4,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public enum GameState { Playing, Caught, Won }
+    public enum GameState { WaitingToStart, Playing, Caught, Won }
 
     public GameState State { get; private set; } = GameState.Playing;
 
@@ -23,7 +23,15 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
+        State = GameState.WaitingToStart;
         _timeRemaining = timeLimit;
+    }
+
+    public void StartGame()
+    {
+        if (State != GameState.WaitingToStart) return;
+        State = GameState.Playing;
+        EventManager.FireGameStarted();
     }
 
     void Update()
@@ -51,4 +59,5 @@ public class GameManager : MonoBehaviour
     }
 
     public bool IsPlaying() => State == GameState.Playing;
+    public bool IsWaiting() => State == GameState.WaitingToStart;
 }

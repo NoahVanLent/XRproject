@@ -14,6 +14,7 @@ using UnityEngine;
 public static class EventManager
 {
     // Game state events
+    public static event Action OnGameStarted;
     public static event Action OnPlayerCaught;
     public static event Action OnPlayerWon;
     public static event Action OnGameRestart;
@@ -25,6 +26,7 @@ public static class EventManager
     public static event Action OnObjectGrabbed;
     public static event Action OnObjectReleased;
 
+    public static void FireGameStarted()  => OnGameStarted?.Invoke();
     public static void FirePlayerCaught()
     {
         Debug.Log("Event: PlayerCaught");

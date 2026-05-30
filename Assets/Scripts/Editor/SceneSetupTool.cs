@@ -19,6 +19,7 @@ public static class SceneSetupTool
         SetupGrabbableProps();
         SetupFloor();
         SetupUI();
+        SetupStartButton();
 
         Debug.Log("Scene setup complete! Don't forget to bake the NavMesh: Window > AI > Navigation > Bake.");
     }
@@ -339,10 +340,10 @@ public static class SceneSetupTool
 
         // Wire UIManager references
         var so = new SerializedObject(uiManager);
-        so.FindProperty("timerText").objectReferenceValue      = timerGO.GetComponent<TMPro.TextMeshProUGUI>();
+        so.FindProperty("timerText").objectReferenceValue        = timerGO.GetComponent<TMPro.TextMeshProUGUI>();
         so.FindProperty("hiddenStatusText").objectReferenceValue = hiddenGO.GetComponent<TMPro.TextMeshProUGUI>();
-        so.FindProperty("caughtPanel").objectReferenceValue    = caughtPanel;
-        so.FindProperty("wonPanel").objectReferenceValue       = wonPanel;
+        so.FindProperty("caughtPanel").objectReferenceValue      = caughtPanel;
+        so.FindProperty("wonPanel").objectReferenceValue         = wonPanel;
         so.ApplyModifiedProperties();
 
         Undo.RegisterCreatedObjectUndo(canvasGO, "Create WorldSpaceUI");
@@ -413,6 +414,62 @@ public static class SceneSetupTool
         tmp.color = Color.black;
         tmp.alignment = TMPro.TextAlignmentOptions.Center;
         tmp.fontStyle = TMPro.FontStyles.Bold;
+    }
+
+    static void SetupStartButton()
+    {
+        if (GameObject.Find("StartButton_3D") != null) return;
+
+        // 3D panel floating in front of spawn point
+        var panel = new GameObject("StartButton_3D");
+        panel.transform.position = new Vector3(0, 1.5f, 1.5f);
+        Undo.RegisterCreatedObjectUndo(panel, "Create StartButton");
+
+        // Background board
+        var bg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bg.name = "StartPanel_BG";
+        bg.transform.SetParent(panel.transform);
+        bg.transform.localPosition = Vector3.zero;
+        bg.transform.localScale = new Vector3(0.8f, 0.5f, 0.02f);
+        var bgMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        bgMat.color = new Color(0.08f, 0.08f, 0.15f, 0.95f);
+        bg.GetComponent<Renderer>().sharedMaterial = bgMat;
+        Object.DestroyImmediate(bg.GetComponent<Collider>());
+
+        // Title text
+        var titleGO = new GameObject("TitleText");
+        titleGO.transform.SetParent(panel.transform);
+        titleGO.transform.localPosition = new Vector3(0, 0.08f, -0.012f);
+        titleGO.transform.localScale    = Vector3.one * 0.005f;
+        var title = titleGO.AddComponent<TMPro.TextMeshPro>();
+        title.text      = "HIDE & SNEAK";
+        title.fontSize  = 28;
+        title.color     = Color.white;
+        title.alignment = TMPro.TextAlignmentOptions.Center;
+        title.fontStyle = TMPro.FontStyles.Bold;
+
+        // Start button cube
+        var btn = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        btn.name = "StartButton";
+        btn.transform.SetParent(panel.transform);
+        btn.transform.localPosition = new Vector3(0, -0.1f, -0.012f);
+        btn.transform.localScale    = new Vector3(0.3f, 0.1f, 0.015f);
+        var btnMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        btnMat.color = new Color(0.1f, 0.7f, 0.1f);
+        btn.GetComponent<Renderer>().sharedMaterial = btnMat;
+        btn.AddComponent<StartButton>();
+
+        // Button label
+        var labelGO = new GameObject("BtnLabel");
+        labelGO.transform.SetParent(btn.transform);
+        labelGO.transform.localPosition = new Vector3(0, 0, -0.6f);
+        labelGO.transform.localScale    = Vector3.one * 0.02f;
+        var label = labelGO.AddComponent<TMPro.TextMeshPro>();
+        label.text      = "START";
+        label.fontSize  = 18;
+        label.color     = Color.white;
+        label.alignment = TMPro.TextAlignmentOptions.Center;
+        label.fontStyle = TMPro.FontStyles.Bold;
     }
 
     static void SetupFloor()
