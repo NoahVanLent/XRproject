@@ -65,10 +65,13 @@ public static class SceneSetupTool
         xrOrigin.transform.position = Vector3.zero;
         Undo.RegisterCreatedObjectUndo(xrOrigin, "Create XR Origin");
 
+        // Add the actual XROrigin component for proper HMD tracking
+        var xrOriginComponent = xrOrigin.AddComponent<Unity.XR.CoreUtils.XROrigin>();
+
         // Camera Offset
         var cameraOffset = new GameObject("Camera Offset");
         cameraOffset.transform.SetParent(xrOrigin.transform);
-        cameraOffset.transform.localPosition = new Vector3(0, 1.36f, 0);
+        cameraOffset.transform.localPosition = Vector3.zero;
 
         // Main Camera
         var cameraGO = new GameObject("Main Camera");
@@ -79,31 +82,49 @@ public static class SceneSetupTool
         cameraGO.tag = "MainCamera";
         cameraGO.AddComponent<AudioListener>();
 
-        // Add TrackedPoseDriver so camera follows headset
+        // TrackedPoseDriver — makes the camera follow the headset rotation & position
         var tpd = cameraGO.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
+        var posAction = new UnityEngine.InputSystem.InputAction(
+            binding: "<XRHMD>/centerEyePosition",
+            expectedControlType: "Vector3");
+        var rotAction = new UnityEngine.InputSystem.InputAction(
+            binding: "<XRHMD>/centerEyeRotation",
+            expectedControlType: "Quaternion");
+        tpd.positionInput = new UnityEngine.InputSystem.InputActionProperty(posAction);
+        tpd.rotationInput = new UnityEngine.InputSystem.InputActionProperty(rotAction);
+
+        // Wire XROrigin references
+        xrOriginComponent.Camera = cam;
+        xrOriginComponent.CameraFloorOffsetObject = cameraOffset;
 
         // Left Controller — direct interactor (grab nearby objects)
         var leftHand = new GameObject("Left Controller");
         leftHand.transform.SetParent(cameraOffset.transform);
         leftHand.transform.localPosition = new Vector3(-0.2f, -0.2f, 0.3f);
-        leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
+        var leftXRController = leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
         leftHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRDirectInteractor>();
+
+        // Left controller tracking
+        var leftTPD = leftHand.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
+        var leftPosAction = new UnityEngine.InputSystem.InputAction(binding: "<XRController>{LeftHand}/devicePosition", expectedControlType: "Vector3");
+        var leftRotAction = new UnityEngine.InputSystem.InputAction(binding: "<XRController>{LeftHand}/deviceRotation", expectedControlType: "Quaternion");
+        leftTPD.positionInput = new UnityEngine.InputSystem.InputActionProperty(leftPosAction);
+        leftTPD.rotationInput = new UnityEngine.InputSystem.InputActionProperty(leftRotAction);
 
         // Right Controller — ray interactor (point and select at distance)
         var rightHand = new GameObject("Right Controller");
         rightHand.transform.SetParent(cameraOffset.transform);
         rightHand.transform.localPosition = new Vector3(0.2f, -0.2f, 0.3f);
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.XRController>();
-        var rayInteractor = rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
-
-        // Visual ray line
-        var lineRenderer = rightHand.AddComponent<LineRenderer>();
-        lineRenderer.startWidth = 0.005f;
-        lineRenderer.endWidth = 0.005f;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor = Color.white;
-        lineRenderer.endColor = new Color(1, 1, 1, 0f);
+        rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
         rightHand.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
+
+        // Right controller tracking
+        var rightTPD = rightHand.AddComponent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
+        var rightPosAction = new UnityEngine.InputSystem.InputAction(binding: "<XRController>{RightHand}/devicePosition", expectedControlType: "Vector3");
+        var rightRotAction = new UnityEngine.InputSystem.InputAction(binding: "<XRController>{RightHand}/deviceRotation", expectedControlType: "Quaternion");
+        rightTPD.positionInput = new UnityEngine.InputSystem.InputActionProperty(rightPosAction);
+        rightTPD.rotationInput = new UnityEngine.InputSystem.InputActionProperty(rightRotAction);
 
         // XR Interaction Manager (needed for interactions)
         if (GameObject.FindObjectOfType<XRInteractionManager>() == null)
@@ -114,7 +135,7 @@ public static class SceneSetupTool
         }
 
         ConfigureXROrigin(xrOrigin);
-        Debug.Log("XR Origin created. Go to Edit > Project Settings > XR Plug-in Management, enable OpenXR, then add the Meta Quest Feature Set under OpenXR features.");
+        Debug.Log("XR Origin created with full HMD + controller tracking.");
     }
 
     static void ConfigureXROrigin(GameObject xrOrigin)
