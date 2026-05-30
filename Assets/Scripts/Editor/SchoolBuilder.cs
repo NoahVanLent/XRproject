@@ -11,12 +11,12 @@ public static class SchoolBuilder
 {
     private const float WallHeight   = 3f;
     private const float WallThick    = 0.2f;
-    private const float DoorWidth    = 1.6f;
-    private const float DoorHeight   = 2.2f;
+    private const float DoorWidth    = 3f;    // wider so NavMesh agents fit through
+    private const float DoorHeight   = 2.4f;
     private const float HallWidth    = 4f;
-    private const float HallLength   = 24f;
-    private const float RoomWidth    = 8f;
-    private const float RoomDepth    = 7f;
+    private const float HallLength   = 28f;
+    private const float RoomWidth    = 12f;   // bigger classrooms
+    private const float RoomDepth    = 9f;
 
     private static Material _wallMat;
     private static Material _floorMat;
@@ -40,10 +40,10 @@ public static class SchoolBuilder
         Undo.RegisterCreatedObjectUndo(_root, "Build School");
 
         BuildHallway();
-        BuildClassroom("Classroom_L1", new Vector3(-(HallWidth / 2 + RoomWidth / 2), 0, 8f),  doorOnRight: true);
-        BuildClassroom("Classroom_L2", new Vector3(-(HallWidth / 2 + RoomWidth / 2), 0, -4f), doorOnRight: true);
-        BuildClassroom("Classroom_R1", new Vector3( (HallWidth / 2 + RoomWidth / 2), 0, 8f),  doorOnRight: false);
-        BuildClassroom("Classroom_R2", new Vector3( (HallWidth / 2 + RoomWidth / 2), 0, -4f), doorOnRight: false);
+        BuildClassroom("Classroom_L1", new Vector3(-(HallWidth / 2 + RoomWidth / 2), 0,  9f), doorOnRight: true);
+        BuildClassroom("Classroom_L2", new Vector3(-(HallWidth / 2 + RoomWidth / 2), 0, -5f), doorOnRight: true);
+        BuildClassroom("Classroom_R1", new Vector3( (HallWidth / 2 + RoomWidth / 2), 0,  9f), doorOnRight: false);
+        BuildClassroom("Classroom_R2", new Vector3( (HallWidth / 2 + RoomWidth / 2), 0, -5f), doorOnRight: false);
 
         Debug.Log("School built! Please REBAKE the NavMesh: click NavMesh Surface on the School/Floor object → Bake.");
     }
@@ -95,10 +95,10 @@ public static class SchoolBuilder
             new Vector3(HallWidth, WallHeight, WallThick),
             _wallMat);
 
-        // Left side wall — gaps at classroom center Z positions (8 and -4)
-        BuildCorridorSideWall("WallLeft",  hall, -HallWidth / 2f, new float[] { 8f, -4f });
+        // Left side wall — gaps at classroom center Z positions
+        BuildCorridorSideWall("WallLeft",  hall, -HallWidth / 2f, new float[] { 9f, -5f });
         // Right side wall
-        BuildCorridorSideWall("WallRight", hall,  HallWidth / 2f, new float[] { 8f, -4f });
+        BuildCorridorSideWall("WallRight", hall,  HallWidth / 2f, new float[] { 9f, -5f });
     }
 
     // Side walls of hallway with gaps where classroom doors are
