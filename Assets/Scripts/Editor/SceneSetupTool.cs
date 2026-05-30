@@ -14,9 +14,7 @@ public static class SceneSetupTool
         SetupTags();
         SetupGameManager();
         SetupXROrigin();
-        SetupSeekerAgent();
-        SetupGuardAgent();
-        SetupWatcherAgent();
+        SetupAgents();
         SetupHidingSpots();
         SetupGrabbableProps();
         SetupFloor();
@@ -179,81 +177,54 @@ public static class SceneSetupTool
         }
     }
 
-    static void SetupSeekerAgent()
+    static void SetupAgents()
     {
-        if (GameObject.Find("Seeker") != null) return;
-
-        var patrolPoints = CreatePatrolPoints("SeekerPatrol", new Vector3[]
+        // Agent 1: Wander (red) — roams randomly
+        if (GameObject.Find("Agent_Wanderer") == null)
         {
-            new Vector3(-5, 0, -5),
-            new Vector3(5, 0, -5),
-            new Vector3(5, 0, 5),
-            new Vector3(-5, 0, 5),
-        });
+            var go = CreateAgentObject("Agent_Wanderer", new Vector3(0, 0, -8), Color.red);
+            var navAgent = go.AddComponent<NavMeshAgent>();
+            navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
-        var go = CreateAgentObject("Seeker", new Vector3(0, 0, -8), Color.red);
-        var agent = go.AddComponent<NavMeshAgent>();
-        agent.radius = 0.4f;
-        agent.height = 1.8f;
+            var seeker = go.AddComponent<SeekerAgent>();
+            var so = new SerializedObject(seeker);
+            so.FindProperty("mode").enumValueIndex = 0;         // Wander
+            so.FindProperty("wanderSpeed").floatValue = 1.2f;
+            so.FindProperty("wanderRadius").floatValue = 12f;
+            so.ApplyModifiedProperties();
+            Undo.RegisterCreatedObjectUndo(go, "Create Wanderer");
+        }
 
-        var seeker = go.AddComponent<SeekerAgent>();
-
-        // Assign patrol points via SerializedObject so they show in Inspector
-        var so = new SerializedObject(seeker);
-        var prop = so.FindProperty("patrolPoints");
-        prop.arraySize = patrolPoints.Count;
-        for (int i = 0; i < patrolPoints.Count; i++)
-            prop.GetArrayElementAtIndex(i).objectReferenceValue = patrolPoints[i];
-        so.ApplyModifiedProperties();
-
-        Undo.RegisterCreatedObjectUndo(go, "Create Seeker");
-    }
-
-    static void SetupGuardAgent()
-    {
-        if (GameObject.Find("Guard") != null) return;
-
-        var patrolPoints = CreatePatrolPoints("GuardPatrol", new Vector3[]
+        // Agent 2: Chaser (blue) — always follows player
+        if (GameObject.Find("Agent_Chaser") == null)
         {
-            new Vector3(-8, 0, 0),
-            new Vector3(-8, 0, 8),
-            new Vector3(0, 0, 8),
-        });
+            var go = CreateAgentObject("Agent_Chaser", new Vector3(-8, 0, 0), Color.blue);
+            var navAgent = go.AddComponent<NavMeshAgent>();
+            navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
-        var go = CreateAgentObject("Guard", new Vector3(-8, 0, 0), Color.cyan);
-        var agent = go.AddComponent<NavMeshAgent>();
-        agent.radius = 0.4f;
-        agent.height = 1.8f;
+            var seeker = go.AddComponent<SeekerAgent>();
+            var so = new SerializedObject(seeker);
+            so.FindProperty("mode").enumValueIndex = 1;         // Chaser
+            so.FindProperty("chaseSpeed").floatValue = 1.8f;
+            so.ApplyModifiedProperties();
+            Undo.RegisterCreatedObjectUndo(go, "Create Chaser");
+        }
 
-        var guard = go.AddComponent<GuardAgent>();
+        // Agent 3: Stalker (magenta) — stands still until it sees player
+        if (GameObject.Find("Agent_Stalker") == null)
+        {
+            var go = CreateAgentObject("Agent_Stalker", new Vector3(8, 0, 0), Color.magenta);
+            var navAgent = go.AddComponent<NavMeshAgent>();
+            navAgent.radius = 0.4f; navAgent.height = 1.8f;
 
-        var so = new SerializedObject(guard);
-        var prop = so.FindProperty("patrolPoints");
-        prop.arraySize = patrolPoints.Count;
-        for (int i = 0; i < patrolPoints.Count; i++)
-            prop.GetArrayElementAtIndex(i).objectReferenceValue = patrolPoints[i];
-        so.ApplyModifiedProperties();
-
-        Undo.RegisterCreatedObjectUndo(go, "Create Guard");
-    }
-
-    static void SetupWatcherAgent()
-    {
-        if (GameObject.Find("Watcher") != null) return;
-
-        var go = CreateAgentObject("Watcher", new Vector3(8, 0, 0), Color.magenta);
-        var agent = go.AddComponent<NavMeshAgent>();
-        agent.radius = 0.4f;
-        agent.height = 1.8f;
-
-        var stalker = go.AddComponent<SeekerAgent>();
-        var so = new SerializedObject(stalker);
-        so.FindProperty("mode").enumValueIndex = 2;        // Mode.Stalker
-        so.FindProperty("stalkerSpeed").floatValue = 1.5f;
-        so.FindProperty("sightRange").floatValue = 10f;
-        so.ApplyModifiedProperties();
-
-        Undo.RegisterCreatedObjectUndo(go, "Create Watcher");
+            var seeker = go.AddComponent<SeekerAgent>();
+            var so = new SerializedObject(seeker);
+            so.FindProperty("mode").enumValueIndex = 2;         // Stalker
+            so.FindProperty("stalkerSpeed").floatValue = 1.5f;
+            so.FindProperty("sightRange").floatValue = 10f;
+            so.ApplyModifiedProperties();
+            Undo.RegisterCreatedObjectUndo(go, "Create Stalker");
+        }
     }
 
     static void SetupHidingSpots()
