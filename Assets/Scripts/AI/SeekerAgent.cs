@@ -46,7 +46,7 @@ public class SeekerAgent : MonoBehaviour
         {
             case Mode.Wander:  _agent.speed = wanderSpeed;  break;
             case Mode.Chaser:  _agent.speed = chaseSpeed;   break;
-            case Mode.Stalker: _agent.speed = 0f;           break;
+            case Mode.Stalker: _agent.speed = 0f; _agent.isStopped = true; break;
         }
     }
 
@@ -69,6 +69,18 @@ public class SeekerAgent : MonoBehaviour
     // ── Wander ──────────────────────────────────────────────
     void UpdateWander()
     {
+        // If player spotted, switch to chasing
+        if (CanSeePlayer())
+        {
+            _agent.speed = chaseSpeed;
+            _agent.SetDestination(_player.position);
+            if (Vector3.Distance(transform.position, _player.position) < 1.5f)
+                GameManager.Instance.TriggerCaught();
+            return;
+        }
+
+        // Otherwise roam randomly
+        _agent.speed = wanderSpeed;
         if (_agent.pathPending) return;
 
         if (_agent.remainingDistance <= _agent.stoppingDistance)
@@ -106,13 +118,14 @@ public class SeekerAgent : MonoBehaviour
             if (CanSeePlayer())
             {
                 _activated = true;
+                _agent.isStopped = false;
                 _agent.speed = stalkerSpeed;
                 Debug.Log("Stalker: player spotted!");
             }
             return;
         }
 
-        // Once activated, chase like a chaser
+        // Once activated, chase the player
         if (_player == null) return;
         _agent.SetDestination(_player.position);
 
