@@ -95,10 +95,10 @@ public static class SchoolBuilder
             new Vector3(HallWidth, WallHeight, WallThick),
             _wallMat);
 
-        // Left side wall — split into segments with doorway gaps
-        BuildCorridorSideWall("WallLeft", hall, -HallWidth / 2f, new float[] { 2f, -4f + RoomDepth });
+        // Left side wall — gaps at classroom center Z positions (8 and -4)
+        BuildCorridorSideWall("WallLeft",  hall, -HallWidth / 2f, new float[] { 8f, -4f });
         // Right side wall
-        BuildCorridorSideWall("WallRight", hall, HallWidth / 2f, new float[] { 2f, -4f + RoomDepth });
+        BuildCorridorSideWall("WallRight", hall,  HallWidth / 2f, new float[] { 8f, -4f });
     }
 
     // Side walls of hallway with gaps where classroom doors are
