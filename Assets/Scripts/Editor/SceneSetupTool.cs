@@ -39,6 +39,10 @@ public static class SceneSetupTool
         var go = new GameObject("GameManager");
         go.AddComponent<GameManager>();
         Undo.RegisterCreatedObjectUndo(go, "Create GameManager");
+
+        var audioGO = new GameObject("AudioManager");
+        audioGO.AddComponent<AudioManager>();
+        Undo.RegisterCreatedObjectUndo(audioGO, "Create AudioManager");
     }
 
     static void SetupXROrigin()

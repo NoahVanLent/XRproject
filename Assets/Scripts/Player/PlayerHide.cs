@@ -12,13 +12,13 @@ public class PlayerHide : MonoBehaviour
     {
         IsHidden = true;
         if (hiddenIndicator != null) hiddenIndicator.SetActive(true);
-        Debug.Log("Player: hidden");
+        EventManager.FirePlayerHidden();
     }
 
     public void Unhide()
     {
         IsHidden = false;
         if (hiddenIndicator != null) hiddenIndicator.SetActive(false);
-        Debug.Log("Player: visible");
+        EventManager.FirePlayerVisible();
     }
 }

@@ -97,7 +97,7 @@ public class ControllerRay : MonoBehaviour
         _heldRb.useGravity = false;
 
         SetHighlight(_heldObject, false);
-        Debug.Log($"Grabbed: {obj.name}");
+        EventManager.FireObjectGrabbed();
     }
 
     void UpdateHeld()
@@ -130,7 +130,7 @@ public class ControllerRay : MonoBehaviour
             _heldRb.useGravity = true;
         }
 
-        Debug.Log($"Released: {_heldObject.name}");
+        EventManager.FireObjectReleased();
         _heldObject = null;
         _heldRb = null;
         _triggerWasPressed = false;

@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing) return;
 
         _timeRemaining -= Time.deltaTime;
+        EventManager.FireTimerUpdated(_timeRemaining);
         if (_timeRemaining <= 0f)
             TriggerWin();
     }
@@ -40,14 +41,14 @@ public class GameManager : MonoBehaviour
     {
         if (State != GameState.Playing) return;
         State = GameState.Caught;
-        Debug.Log("GameManager: Player caught!");
+        EventManager.FirePlayerCaught();
     }
 
     public void TriggerWin()
     {
         if (State != GameState.Playing) return;
         State = GameState.Won;
-        Debug.Log("GameManager: Player survived!");
+        EventManager.FirePlayerWon();
     }
 
     public bool IsPlaying() => State == GameState.Playing;
