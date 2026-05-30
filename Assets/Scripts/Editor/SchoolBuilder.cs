@@ -114,10 +114,10 @@ public static class SchoolBuilder
         CreateBox("WallNear", hall, new Vector3(0, WallHeight / 2, startZ),
             new Vector3(HallWidth, WallHeight, WallThick), _wallMat);
 
-        // Skirting boards
-        CreateBox("SkirtLeft",  hall, new Vector3(-HallWidth / 2, 0.08f, midZ),
+        // Skirting boards (decorative)
+        CreateDecor("SkirtLeft",  hall, new Vector3(-HallWidth / 2, 0.08f, midZ),
             new Vector3(WallThick * 0.5f, 0.16f, HallLength), _trimMat);
-        CreateBox("SkirtRight", hall, new Vector3( HallWidth / 2, 0.08f, midZ),
+        CreateDecor("SkirtRight", hall, new Vector3( HallWidth / 2, 0.08f, midZ),
             new Vector3(WallThick * 0.5f, 0.16f, HallLength), _trimMat);
 
         // Side walls with door gaps
@@ -196,18 +196,18 @@ public static class SchoolBuilder
         CreateBox("Ceiling", room, new Vector3(cx, WallHeight, cz),
             new Vector3(RoomWidth, WallThick, RoomDepth), _ceilMat);
 
-        // Skirting
-        CreateBox("SkirtFront", room, new Vector3(cx, 0.08f, cz + halfD),
+        // Skirting (decorative)
+        CreateDecor("SkirtFront", room, new Vector3(cx, 0.08f, cz + halfD),
             new Vector3(RoomWidth, 0.16f, WallThick * 0.5f), _trimMat);
-        CreateBox("SkirtBack2", room, new Vector3(cx, 0.08f, cz - halfD),
+        CreateDecor("SkirtBack2", room, new Vector3(cx, 0.08f, cz - halfD),
             new Vector3(RoomWidth, 0.16f, WallThick * 0.5f), _trimMat);
 
         // Back wall (away from hallway) with accent color strip
         float backX = doorOnRight ? cx - halfW : cx + halfW;
         CreateBox("WallBack", room, new Vector3(backX, WallHeight / 2, cz),
             new Vector3(WallThick, WallHeight, RoomDepth), _wallMat);
-        // Accent strip on back wall
-        CreateBox("AccentStrip", room, new Vector3(backX, 1.5f, cz),
+        // Accent strip on back wall (decorative)
+        CreateDecor("AccentStrip", room, new Vector3(backX, 1.5f, cz),
             new Vector3(WallThick * 0.5f, 1.0f, RoomDepth), accentMat);
 
         // Side walls with windows
@@ -231,21 +231,20 @@ public static class SchoolBuilder
             new Vector3(hallSideX, DoorHeight + aboveH / 2, doorCZ),
             new Vector3(WallThick, aboveH, DoorWidth), _wallMat);
 
-        // Door frame
-        CreateBox("DoorFrameL", room,
+        // Door frame (decorative)
+        CreateDecor("DoorFrameL", room,
             new Vector3(hallSideX, DoorHeight / 2, doorCZ - DoorWidth / 2),
             new Vector3(WallThick * 2f, DoorHeight, 0.08f), _trimMat);
-        CreateBox("DoorFrameR", room,
+        CreateDecor("DoorFrameR", room,
             new Vector3(hallSideX, DoorHeight / 2, doorCZ + DoorWidth / 2),
             new Vector3(WallThick * 2f, DoorHeight, 0.08f), _trimMat);
 
-        // Blackboard on back wall
+        // Blackboard on back wall (decorative)
         float boardX = backX + (doorOnRight ? WallThick : -WallThick);
-        CreateBox("Blackboard", room,
+        CreateDecor("Blackboard", room,
             new Vector3(boardX, 1.6f, cz),
             new Vector3(0.1f, 1.0f, 3.0f), _blackboardMat);
-        // Board ledge
-        CreateBox("BoardLedge", room,
+        CreateDecor("BoardLedge", room,
             new Vector3(boardX, 1.08f, cz),
             new Vector3(0.12f, 0.06f, 3.1f), _trimMat);
 
@@ -285,19 +284,13 @@ public static class SchoolBuilder
             new Vector3(cx, WallHeight / 2, wallZ),
             new Vector3(RoomWidth, WallHeight, WallThick), _wallMat);
 
-        // Window cutout (visual only — not a real hole, just a lighter panel)
-        CreateBox(name + "_Window", parent,
-            new Vector3(cx, 1.5f, wallZ),
-            new Vector3(RoomWidth * 0.35f, 1.0f, WallThick * 0.3f), _windowMat);
-
-        // Window frame
-        CreateBox(name + "_WinFrame", parent,
+        // Window and frame (decorative — no colliders)
+        CreateDecor(name + "_WinFrame", parent,
             new Vector3(cx, 1.5f, wallZ),
             new Vector3(RoomWidth * 0.37f, 1.06f, WallThick * 0.5f), _trimMat);
-        // Window glass on top
-        CreateBox(name + "_WindowInner", parent,
-            new Vector3(cx, 1.5f, wallZ + WallThick * 0.01f),
-            new Vector3(RoomWidth * 0.34f, 0.98f, WallThick * 0.1f), _windowMat);
+        CreateDecor(name + "_Window", parent,
+            new Vector3(cx, 1.5f, wallZ),
+            new Vector3(RoomWidth * 0.34f, 0.98f, WallThick * 0.2f), _windowMat);
     }
 
     // ── Furniture ─────────────────────────────────────────────────────────────
@@ -311,24 +304,23 @@ public static class SchoolBuilder
             new Vector3(pos.x, 0.72f, pos.z),
             new Vector3(1.1f, 0.04f, 0.55f), deskMat);
 
-        // Legs
+        // Legs (decorative — no collider)
         float lx = 0.45f, lz = 0.22f;
         foreach (var offset in new[] {
             new Vector3(-lx, -0.36f, -lz), new Vector3( lx, -0.36f, -lz),
             new Vector3(-lx, -0.36f,  lz), new Vector3( lx, -0.36f,  lz) })
         {
-            CreateBox("Leg", desk, offset, new Vector3(0.04f, 0.68f, 0.04f), _trimMat);
+            CreateDecor("Leg", desk, offset, new Vector3(0.04f, 0.68f, 0.04f), _trimMat);
         }
 
-        // Chair
+        // Chair (decorative)
         var chairMat = MakeMat(new Color(0.85f, 0.85f, 0.85f));
-        var chair = CreateBox("Chair", parent,
-            new Vector3(pos.x, 0.44f, pos.z + 0.5f),
+        var chair = CreateDecor("Chair", parent,
+            new Vector3(0f, -0.28f, 0.5f),
             new Vector3(0.42f, 0.03f, 0.42f), chairMat);
-        // Chair back
-        CreateBox("ChairBack", chair,
-            new Vector3(0, 0.3f, -0.18f),
-            new Vector3(0.42f, 0.5f, 0.03f), chairMat);
+        CreateDecor("ChairBack", chair,
+            new Vector3(0, 10f, -6f),
+            new Vector3(1f, 0.5f, 0.06f), chairMat);
 
         // Hiding spot under desk
         var trigger = new GameObject("HidingSpot_Desk");
@@ -347,12 +339,11 @@ public static class SchoolBuilder
             new Vector3(pos.x, 0.78f, pos.z),
             new Vector3(1.8f, 0.06f, 0.7f), deskMat);
         // Drawer block
-        CreateBox("TeacherDrawers", parent,
-            new Vector3(pos.x + 0.55f, 0.39f, pos.z),
+        CreateDecor("TeacherDrawers", parent,
+            new Vector3(0.55f, -0.39f, 0f),
             new Vector3(0.6f, 0.72f, 0.65f), deskMat);
-        // Monitor stand-in
-        CreateBox("Monitor", parent,
-            new Vector3(pos.x - 0.3f, 1.2f, pos.z),
+        CreateDecor("Monitor", parent,
+            new Vector3(-0.3f, 0.42f, 0f),
             new Vector3(0.5f, 0.35f, 0.04f),
             MakeMat(new Color(0.1f, 0.1f, 0.1f)));
     }
@@ -382,10 +373,10 @@ public static class SchoolBuilder
             var locker = CreateBox($"Locker_{i}", parent,
                 new Vector3(x, 0.9f, lz),
                 new Vector3(0.3f, 1.8f, lockerW - 0.02f), _lockerMat);
-            // Locker handle
-            CreateBox("Handle", locker,
-                new Vector3(0f, 0f, 0.26f),
-                new Vector3(0.04f, 0.12f, 0.02f),
+            // Locker handle (decorative)
+            CreateDecor("Handle", locker,
+                new Vector3(0f, 0f, 0.54f),
+                new Vector3(0.08f, 0.22f, 0.04f),
                 MakeMat(new Color(0.8f, 0.7f, 0.1f)));
         }
     }
@@ -415,28 +406,20 @@ public static class SchoolBuilder
         // Add a head sphere if not already present
         if (agent.transform.Find("Head") != null) return;
 
-        var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        head.name = "Head";
-        head.transform.SetParent(agent.transform);
-        head.transform.localPosition = new Vector3(0, 1.15f, 0);
-        head.transform.localScale    = new Vector3(0.45f, 0.45f, 0.45f);
-        head.GetComponent<Renderer>().sharedMaterial = MakeMat(new Color(0.95f, 0.80f, 0.65f));
+        var head = CreateDecorSphere("Head", agent,
+            new Vector3(0, 1.15f, 0),
+            new Vector3(0.45f, 0.45f, 0.45f),
+            MakeMat(new Color(0.95f, 0.80f, 0.65f)));
 
-        // Eyes
+        // Eyes (decorative, no colliders)
         var eyeMat = MakeMat(Color.black);
-        foreach (var offset in new[] { new Vector3(-0.1f, 0.05f, 0.2f), new Vector3(0.1f, 0.05f, 0.2f) })
-        {
-            var eye = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            eye.name = "Eye";
-            eye.transform.SetParent(head.transform);
-            eye.transform.localPosition = offset;
-            eye.transform.localScale    = Vector3.one * 0.2f;
-            eye.GetComponent<Renderer>().sharedMaterial = eyeMat;
-        }
+        CreateDecorSphere("EyeL", head, new Vector3(-0.22f, 0.1f, 0.42f), Vector3.one * 0.2f, eyeMat);
+        CreateDecorSphere("EyeR", head, new Vector3( 0.22f, 0.1f, 0.42f), Vector3.one * 0.2f, eyeMat);
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
+    // With collider — use for floors, walls, main desk surfaces (blocks navigation + player)
     static GameObject CreateBox(string name, GameObject parent,
         Vector3 position, Vector3 scale, Material mat)
     {
@@ -446,6 +429,34 @@ public static class SchoolBuilder
         go.transform.position   = position;
         go.transform.localScale = scale;
         go.GetComponent<Renderer>().sharedMaterial = mat;
+        return go;
+    }
+
+    // Without collider — use for decorative pieces (legs, handles, eyes, frames)
+    // so they don't block NavMesh baking or agent movement
+    static GameObject CreateDecor(string name, GameObject parent,
+        Vector3 localPosition, Vector3 localScale, Material mat)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent.transform);
+        go.transform.localPosition = localPosition;
+        go.transform.localScale    = localScale;
+        go.GetComponent<Renderer>().sharedMaterial = mat;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        return go;
+    }
+
+    static GameObject CreateDecorSphere(string name, GameObject parent,
+        Vector3 localPosition, Vector3 localScale, Material mat)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        go.name = name;
+        go.transform.SetParent(parent.transform);
+        go.transform.localPosition = localPosition;
+        go.transform.localScale    = localScale;
+        go.GetComponent<Renderer>().sharedMaterial = mat;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
         return go;
     }
 }
